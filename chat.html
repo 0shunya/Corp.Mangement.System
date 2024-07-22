@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - Corporate Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Corporate Management System</h1>
+    </header>
+    <main>
+        <div class="container">
+            <h2>Chat</h2>
+            <ul id="messages">
+                {% for chat in chat_data %}
+                    <li class="{{ 'my-message' if chat.user_id == current_user else 'other-message' }}">
+                        <span class="username">{{ chat.user_id }}:</span> <span class="message">{{ chat.message }}</span> <small class="timestamp">{{ chat.time }}</small>
+                    </li>
+                {% endfor %}
+            </ul>
+            <input id="message" autocomplete="off" placeholder="Type your message here..." />
+            <button onclick="sendMessage()">Send</button>
+            <button onclick="clearChat()">Clear Chat</button>
+        </div>
+    </main>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        var socket = io();
+        
+        socket.on('connect', function() {
+            console.log('Connected');
+        });
+
+        socket.on('message', function(msg) {
+            var item = document.createElement('li');
+            item.className = msg.user_id == '{{ current_user }}' ? 'my-message' : 'other-message';
+            item.innerHTML = `<span class="username">${msg.user_id}:</span> <span class="message">${msg.message}</span> <small class="timestamp">${msg.time}</small>`;
+            document.getElementById('messages').appendChild(item);
+        });
+
+        function sendMessage() {
+            var messageInput = document.getElementById('message');
+            var message = messageInput.value;
+            if (message.trim() !== '') {
+                socket.send(message);
+                messageInput.value = '';
+            }
+        }
+
+        function clearChat() {
+            fetch('{{ url_for("clear_chat") }}', {
+                method: 'POST'
+            }).then(response => response.json())
+            .then(data => {
+                if (data.message === "Chat cleared") {
+                    var messages = document.getElementById('messages');
+                    messages.innerHTML = '';
+                } else {
+                    alert('Failed to clear chat: ' + data.error);
+                }
+            }).catch(error => {
+                console.error('Error clearing chat:', error);
+                alert('An error occurred while clearing the chat.');
+            });
+        }
+    </script>
+    <style>
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        #messages {
+            list-style-type: none;
+            padding: 0;
+            border: 1px solid #ccc;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .my-message {
+            background-color: #e1ffc7;
+            padding: 5px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        .other-message {
+            background-color: #f1f1f1;
+            padding: 5px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        .username {
+            font-weight: bold;
+        }
+
+        .timestamp {
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        input#message {
+            width: calc(100% - 100px);
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            padding: 10px;
+            margin: 10px 5px 10px 0;
+        }
+    </style>
+</body>
+</html>

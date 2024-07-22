@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script>
+        function handleResponse(response) {
+            return response.json().then(data => {
+                if (response.ok) {
+                    alert(data.message);
+                } else {
+                    alert('Error: ' + (data.message || 'Unknown error'));
+                }
+                return data;
+            });
+        }
+
+        function checkIn() {
+    fetch('/checkin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function checkOut() {
+    fetch('/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function taskCompleted() {
+    fetch('/task_completion_report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task_details: 'Completed Task' })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+        function showChat() {
+            window.location.href = '/chat';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const userLoggedIn = {{ 'true' if session.get('user_id') else 'false' | tojson }};
+            if (userLoggedIn) {
+                document.getElementById('chat-icon').style.display = 'block';
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard</h1>
+        <button onclick="checkIn()">Check In</button>
+        <button onclick="checkOut()">Check Out</button>
+        <button onclick="taskCompleted()">Task Completed</button>
+        <div id="chat-icon" onclick="showChat()" style="display: none;" aria-label="Chat Icon">
+            <img src="{{ url_for('static', filename='chat_icon.png') }}" alt="Chat Icon">
+        </div>
+    </div>
+</body>
+</html>
